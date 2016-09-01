@@ -33,10 +33,12 @@ public class HBaseUtils {
     private static void init() {
         try {
             conn = HBaseConnection.getConnection();
+            logger.debug("init hbase connection.");
             if (null != conn) {
                 admin = conn.getAdmin();
             }
         } catch (Exception e) {
+            logger.error("init hbase connection error");
             e.printStackTrace();
         }
     }
@@ -53,7 +55,7 @@ public class HBaseUtils {
         if (!Strings.isNullOrEmpty(tableName)) {
             return admin.tableExists(TableName.valueOf(tableName));
         } else {
-            throw new RuntimeException("");
+            throw new RuntimeException("tableName is null");
         }
     }
 
@@ -115,10 +117,10 @@ public class HBaseUtils {
             return true;
         } catch (Exception ex) {
             ex.printStackTrace();
-            return false;
         } finally {
             close(table);
         }
+        return false;
     }
 
 
@@ -263,8 +265,11 @@ public class HBaseUtils {
             scan.getStartRow();
             scan.getStopRow();
 
-            for (Result result : rs) {
-                rowList.add(result.getRow());
+            System.out.println(rs);
+            if (rs != null) {
+                for (Result result : rs) {
+                    rowList.add(result.getRow());
+                }
             }
 
             if (rowList != null && rowList.size() > 0) {

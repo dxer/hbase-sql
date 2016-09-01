@@ -36,5 +36,18 @@ public class SqlUtils {
         return null;
     }
 
+    public static String ex(String str) {
+        if (!Strings.isNullOrEmpty(str)) {
+            str = str.trim();
+            if (str.startsWith("'") || str.startsWith("\"")) {
+                str = str.substring(1);
+            }
+
+            if (str.endsWith("'") || str.endsWith("\"")) {
+                str = str.substring(0, str.length() - 1);
+            }
+        }
+        return str;
+    }
 
 }

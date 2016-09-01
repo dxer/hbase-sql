@@ -9,7 +9,7 @@ import net.sf.jsqlparser.expression.operators.relational.*;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.delete.Delete;
 import net.sf.jsqlparser.statement.select.SubSelect;
-import org.apache.hbase.sql.util.SqlUtils;
+import org.apache.hbase.sql.util.VisitorUtils;
 
 import java.util.*;
 
@@ -138,22 +138,7 @@ public class DeleteSqlVisitor implements ExpressionVisitor {
                 if (!delAll && value.equals(SqlContants.ASTERISK)) {
                     delAll = true;
                 } else if (!delAll) {
-                    String[] strs = SqlUtils.getColumngroup(value);
-                    if (strs != null && strs.length == 2) {
-                        String family = strs[0];
-                        String column = strs[1];
-
-                        if (!Strings.isNullOrEmpty(family) && !Strings.isNullOrEmpty(column)) {
-                            List<String> columns = columnMap.get(family);
-                            if (columns != null) {
-                                columns.add(column);
-                            } else {
-                                columns = new ArrayList<String>();
-                                columns.add(column);
-                            }
-                            columnMap.put(family, columns);
-                        }
-                    }
+                    VisitorUtils.setColumnMap(value, columnMap);
                 }
             }
         }
@@ -170,27 +155,10 @@ public class DeleteSqlVisitor implements ExpressionVisitor {
     public void visit(InExpression inExpression) {
         String key = inExpression.getLeftExpression().toString();
         if (SqlContants.ROW_KEY.equals(key.toUpperCase())) {
-            ItemsList itemList = inExpression.getItemsList();
-            if (itemList != null) {
-                List list = ((ExpressionList) itemList).getExpressions();
-                if (list != null && list.size() > 0) {
-                    for (Object o : list) {
-                        String value = null;
-                        if (o instanceof LongValue) {
-                            LongValue longValue = (LongValue) o;
-                            value = ((LongValue) longValue).getStringValue();
-                        } else if (o instanceof StringValue) {
-                            StringValue stringValue = (StringValue) o;
-                            value = stringValue.getValue();
-                        } else if (o instanceof DoubleValue) {
-                            DoubleValue doubleValue = (DoubleValue) o;
-                            value = ((DoubleValue) doubleValue).getValue() + "";
-                        }
-
-                        if (!Strings.isNullOrEmpty(value)) {
-                            rowkeys.add(value);
-                        }
-                    }
+            List<String> values = VisitorUtils.getStringList(inExpression);
+            if (values != null && !values.isEmpty()) {
+                for (String value : values) {
+                    rowkeys.add(value);
                 }
             }
         } else if (SqlContants.HBASE_COLUMN.equals(key.toUpperCase())) {
@@ -208,28 +176,12 @@ public class DeleteSqlVisitor implements ExpressionVisitor {
                         }
 
                         if (!Strings.isNullOrEmpty(value)) {
-                            String[] strs = SqlUtils.getColumngroup(value);
-                            if (strs != null && strs.length == 2) {
-                                String family = strs[0];
-                                String column = strs[1];
-
-                                if (!Strings.isNullOrEmpty(family) && !Strings.isNullOrEmpty(column)) {
-                                    List<String> columns = columnMap.get(family);
-                                    if (columns != null) {
-                                        columns.add(column);
-                                    } else {
-                                        columns = new ArrayList<String>();
-                                        columns.add(column);
-                                    }
-                                    columnMap.put(family, columns);
-                                }
-                            }
+                            VisitorUtils.setColumnMap(value, columnMap);
                         }
                     }
                 }
             }
         }
-
     }
 
     public void visit(IsNullExpression isNullExpression) {

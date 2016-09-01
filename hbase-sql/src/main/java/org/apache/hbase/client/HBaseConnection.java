@@ -16,7 +16,7 @@ public class HBaseConnection {
 
     public static Connection getConnection() throws Exception {
         Configuration conf = HBaseConfiguration.create();
-        conf.set("hbase.zookeeper.quorum", "10.10.10.101:2181");
+        conf.set("hbase.zookeeper.quorum", "192.168.10.101");
         Connection connection = ConnectionFactory.createConnection(conf);
 
         return connection;

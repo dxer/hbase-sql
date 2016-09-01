@@ -13,6 +13,7 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.*;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hbase.sql.util.SqlUtils;
+import org.apache.hbase.sql.util.VisitorUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -55,7 +56,9 @@ public class SelectSqlVisitor implements SelectVisitor, FromItemVisitor, Express
 
     public Scan getScan(String startRow, String stopRow) {
         setScanRange(startRow, stopRow);
-        this.scan.setFilter(this.filters); // 设置过滤器
+        if (filters.getFilters().size() > 0) {
+            this.scan.setFilter(this.filters); // 设置过滤器
+        }
         return this.scan;
     }
 
@@ -90,19 +93,24 @@ public class SelectSqlVisitor implements SelectVisitor, FromItemVisitor, Express
         String value = equalsTo.getRightExpression().toString();
 
         Filter filter = null;
-        if (!Strings.isNullOrEmpty(columnGroupStr) && SqlContants.ROW_KEY.equals(columnGroupStr.toUpperCase())) {
-            filter = new RowFilter(CompareFilter.CompareOp.EQUAL, new BinaryComparator(Bytes.toBytes(value)));
-            this.filters.addFilter(filter);
-            return;
-        } else if (!Strings.isNullOrEmpty(columnGroupStr)) {
-            String[] columnGroup = SqlUtils.getColumngroup(columnGroupStr);
-            if (columnGroup != null && columnGroup.length == 2) {
-                String columnFamily = columnGroup[0]; // 列族
-                String column = columnGroup[1]; // 列名
+        if (!Strings.isNullOrEmpty(columnGroupStr)) {
+            if (SqlContants.ROW_KEY.equals(columnGroupStr.toUpperCase())) {
+                filter = new RowFilter(CompareFilter.CompareOp.EQUAL, new BinaryComparator(Bytes.toBytes(value)));
+                this.filters.addFilter(filter);
+                return;
+            } else if (SqlContants.PRE_ROW_KEY.equals(columnGroupStr.toUpperCase())) {
+                System.out.println(value);
+                this.scan.setRowPrefixFilter(Bytes.toBytes(value));
+            } else if (!Strings.isNullOrEmpty(columnGroupStr)) {
+                String[] columnGroup = SqlUtils.getColumngroup(columnGroupStr);
+                if (columnGroup != null && columnGroup.length == 2) {
+                    String columnFamily = columnGroup[0]; // 列族
+                    String column = columnGroup[1]; // 列名
 
-                filter = new SingleColumnValueFilter(
-                        Bytes.toBytes(columnFamily), Bytes.toBytes(column),
-                        CompareFilter.CompareOp.EQUAL, new BinaryComparator(Bytes.toBytes(value)));
+                    filter = new SingleColumnValueFilter(
+                            Bytes.toBytes(columnFamily), Bytes.toBytes(column),
+                            CompareFilter.CompareOp.EQUAL, new BinaryComparator(Bytes.toBytes(value)));
+                }
             }
         }
 
@@ -224,17 +232,11 @@ public class SelectSqlVisitor implements SelectVisitor, FromItemVisitor, Express
     }
 
     public void visit(AndExpression andExpression) {
-        System.out.println("AndExpression");
-        System.out.println(andExpression.getLeftExpression());
-        System.out.println(andExpression.getRightExpression());
         andExpression.getLeftExpression().accept(this);
         andExpression.getRightExpression().accept(this);
     }
 
     public void visit(OrExpression orExpression) {
-        System.out.println("OrExpression");
-        System.out.println(orExpression.getLeftExpression());
-        System.out.println(orExpression.getRightExpression());
         orExpression.getLeftExpression().accept(this);
         orExpression.getRightExpression().accept(this);
     }
@@ -253,15 +255,45 @@ public class SelectSqlVisitor implements SelectVisitor, FromItemVisitor, Express
     }
 
     public void visit(InExpression inExpression) {
+        String key = inExpression.getLeftExpression().toString();
+
+        ItemsList itemList = inExpression.getItemsList();
+        if (SqlContants.ROW_KEY.equals(key.toUpperCase())) { // row key
+            FilterList rkFilterList = new FilterList(FilterList.Operator.MUST_PASS_ONE);
+            List<String> strList = VisitorUtils.getStringList(inExpression);
+            if (strList != null && !strList.isEmpty()) {
+                for (String str : strList) {
+                    RowFilter rFilter = new RowFilter(CompareFilter.CompareOp.EQUAL, new BinaryComparator(Bytes.toBytes(str)));
+                    rkFilterList.addFilter(rFilter);
+                }
+                filters.addFilter(rkFilterList);
+            }
+        } else { // TODO
+
+        }
 
     }
 
     public void visit(IsNullExpression isNullExpression) {
 
+
     }
 
     public void visit(LikeExpression likeExpression) {
+        String key = VisitorUtils.getString(likeExpression.getLeftExpression());
+        String value = VisitorUtils.getString(likeExpression.getRightExpression());
+        if (!Strings.isNullOrEmpty(value)) {
+            value = SqlUtils.ex(value);
+        }
 
+        if (SqlContants.ROW_KEY.equals(key.toUpperCase())) {
+
+            Filter rkFilter = new RowFilter(CompareFilter.CompareOp.EQUAL, new RegexStringComparator(value));
+
+            filters.addFilter(rkFilter);
+        } else {
+
+        }
     }
 
     public void visit(MinorThan minorThan) {
@@ -347,4 +379,5 @@ public class SelectSqlVisitor implements SelectVisitor, FromItemVisitor, Express
     public void visit(Union union) {
 
     }
+
 }

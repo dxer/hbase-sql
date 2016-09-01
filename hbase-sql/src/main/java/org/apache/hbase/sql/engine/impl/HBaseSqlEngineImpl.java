@@ -2,9 +2,6 @@ package org.apache.hbase.sql.engine.impl;
 
 import com.google.common.base.Strings;
 import net.sf.jsqlparser.JSQLParserException;
-import net.sf.jsqlparser.expression.DoubleValue;
-import net.sf.jsqlparser.expression.LongValue;
-import net.sf.jsqlparser.expression.StringValue;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.parser.CCJSqlParserManager;
 import net.sf.jsqlparser.schema.Column;
@@ -13,30 +10,38 @@ import net.sf.jsqlparser.statement.insert.Insert;
 import net.sf.jsqlparser.statement.select.Select;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hbase.client.HBaseUtils;
-import org.apache.hbase.sql.engine.HSqlEngine;
+import org.apache.hbase.sql.engine.HBaseSqlEngine;
+import org.apache.hbase.sql.result.Result;
+import org.apache.hbase.sql.util.VisitorUtils;
 import org.apache.hbase.sql.visitor.DeleteSqlVisitor;
 import org.apache.hbase.sql.visitor.SelectSqlVisitor;
 import org.apache.hbase.sql.visitor.SqlContants;
 
 import java.io.StringReader;
 import java.sql.SQLSyntaxErrorException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by linghf on 2016/8/29.
  */
 
-public class HSqlEngineImpl implements HSqlEngine {
+public class HBaseSqlEngineImpl implements HBaseSqlEngine {
 
 
-    public List<String> select(String sql) throws Exception {
+    public List<Result> select(String sql) throws Exception {
         return select(sql, null, null);
     }
 
-    public List<String> select(String sql, String startRow, String stopRow) throws Exception {
+    /**
+     * select
+     *
+     * @param sql
+     * @param startRow
+     * @param stopRow
+     * @return
+     * @throws Exception
+     */
+    public List<Result> select(String sql, String startRow, String stopRow) throws Exception {
         SelectSqlVisitor sqlVisitor = parseSql(sql);
         String tableName = sqlVisitor.getTableName();
 
@@ -45,8 +50,19 @@ public class HSqlEngineImpl implements HSqlEngine {
         Map<String, List<String>> columnMap = sqlVisitor.getColumnMap();
         boolean returnRK = sqlVisitor.isReturnRK();
 
-        HBaseUtils.getResult(tableName, scan, columnMap);
-        return null;
+        List<org.apache.hadoop.hbase.client.Result> results = HBaseUtils.getResult(tableName, scan, columnMap);
+
+        List<Result> resultList = null;
+        if (results != null) {
+            resultList = new ArrayList<Result>();
+            for (org.apache.hadoop.hbase.client.Result result : results) {
+                Result r = new Result();
+                r.setResult(result);
+
+                resultList.add(r);
+            }
+        }
+        return resultList;
     }
 
     private SelectSqlVisitor parseSql(String sql) throws SQLSyntaxErrorException {
@@ -61,6 +77,12 @@ public class HSqlEngineImpl implements HSqlEngine {
         return sqlFinder;
     }
 
+    /**
+     * insert
+     *
+     * @param sql
+     * @throws Exception
+     */
     public void insert(String sql) throws Exception {
         CCJSqlParserManager parserManager = new CCJSqlParserManager();
         Insert insert = (Insert) parserManager.parse(new StringReader(sql));
@@ -73,18 +95,7 @@ public class HSqlEngineImpl implements HSqlEngine {
         for (int i = 0; i < size; i++) {
             String key = ((Column) insert.getColumns().get(i)).getWholeColumnName();
             Object o = ((ExpressionList) insert.getItemsList()).getExpressions().get(i);
-            String value = null;
-
-            if (o instanceof LongValue) {
-                LongValue longValue = (LongValue) o;
-                value = ((LongValue) longValue).getStringValue();
-            } else if (o instanceof StringValue) {
-                StringValue stringValue = (StringValue) o;
-                value = stringValue.getValue();
-            } else if (o instanceof DoubleValue) {
-                DoubleValue doubleValue = (DoubleValue) o;
-                value = ((DoubleValue) doubleValue).getValue() + "";
-            }
+            String value = VisitorUtils.getString(o);
 
             if (!Strings.isNullOrEmpty(key) && !Strings.isNullOrEmpty(value)) {
 
@@ -98,7 +109,13 @@ public class HSqlEngineImpl implements HSqlEngine {
         HBaseUtils.putMap(tableName, map);
     }
 
-
+    /**
+     * insert
+     *
+     * @param sql
+     * @param map
+     * @throws Exception
+     */
     public void insert(String sql, HashMap<String, String> map) throws Exception {
         CCJSqlParserManager parserManager = new CCJSqlParserManager();
         Insert insert = (Insert) parserManager.parse(new StringReader(sql));
@@ -125,10 +142,15 @@ public class HSqlEngineImpl implements HSqlEngine {
     public void del(String sql) throws Exception {
         DeleteSqlVisitor sqlVisitor = parseDeleteSqlVisitor(sql);
 
-        sqlVisitor.getTableName();
+        String tableName = sqlVisitor.getTableName();
 
-        System.out.println(sqlVisitor.getRowkeys());
-        System.out.println(sqlVisitor.getColumnMap());
+        Set<String> rowkeys = sqlVisitor.getRowkeys();
+
+        Map<String, List<String>> columnMap = sqlVisitor.getColumnMap();
+
+        if (!Strings.isNullOrEmpty(tableName) && rowkeys != null && rowkeys.size() > 0) {
+            HBaseUtils.deleteColumn(tableName, new ArrayList<String>(rowkeys), columnMap);
+        }
     }
 
     public void del(String sql, List<String> rowkeys) throws Exception {
@@ -139,10 +161,14 @@ public class HSqlEngineImpl implements HSqlEngine {
 
         Map<String, List<String>> columnMap = sqlVisitor.getColumnMap();
 
-        if (delAll) { // 删除所有的column
-            HBaseUtils.deleteAllColumn(tableName, rowkeys);
-        } else { //删除指定的column
-            HBaseUtils.deleteColumn(tableName, rowkeys, columnMap);
+        if (!Strings.isNullOrEmpty(tableName)) {
+            if (delAll) { // 删除所有的column
+                HBaseUtils.deleteAllColumn(tableName, rowkeys);
+            } else { //删除指定的column
+                if (columnMap != null && columnMap.size() > 0) {
+                    HBaseUtils.deleteColumn(tableName, rowkeys, columnMap);
+                }
+            }
         }
     }
 
