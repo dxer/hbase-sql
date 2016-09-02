@@ -253,6 +253,7 @@ public class HBaseUtils {
         return list;
     }
 
+
     public static List<Result> getResult(String tableName, Scan scan, Map<String, List<String>> columnMap) {
         Table table = null;
         ResultScanner rs = null;
