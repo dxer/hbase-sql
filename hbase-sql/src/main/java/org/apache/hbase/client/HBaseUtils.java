@@ -261,28 +261,14 @@ public class HBaseUtils {
         try {
             table = conn.getTable(TableName.valueOf(tableName));
             rs = table.getScanner(scan);
-            Set<byte[]> rowList = new HashSet<byte[]>();
 
             scan.getStartRow();
             scan.getStopRow();
 
-            System.out.println(rs);
             if (rs != null) {
+                resultList = new ArrayList<Result>();
                 for (Result result : rs) {
-                    rowList.add(result.getRow());
-                }
-            }
-
-            if (rowList != null && rowList.size() > 0) {
-                Result[] results = table.get(getList(new ArrayList<byte[]>(rowList), columnMap));
-
-                if (results != null && results.length > 0) {
-                    resultList = new ArrayList<Result>();
-                    resultList.addAll(Arrays.asList(results));
-                }
-
-                for (Result r : results) {
-                    printResult(r);
+                    resultList.add(result);
                 }
             }
         } catch (Exception e) {

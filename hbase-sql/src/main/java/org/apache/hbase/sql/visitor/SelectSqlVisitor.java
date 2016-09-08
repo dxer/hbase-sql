@@ -44,7 +44,10 @@ public class SelectSqlVisitor implements SelectVisitor, FromItemVisitor, Express
     private Map<String, List<String>> columnMap = new HashMap<String, List<String>>();
 
     /*是否返回rowkey*/
-    private boolean returnRK = false;
+    private Boolean returnRK = null;
+
+    /*是否只返回rowkey*/
+    private Boolean returnRKOnly = null;
 
     public SelectSqlVisitor(Select select) {
         select.getSelectBody().accept(this);
@@ -81,11 +84,11 @@ public class SelectSqlVisitor implements SelectVisitor, FromItemVisitor, Express
     }
 
     public boolean isReturnRK() {
-        return returnRK;
+        return returnRK != null ? returnRK : true;
     }
 
-    public void setReturnRK(boolean returnRK) {
-        this.returnRK = returnRK;
+    public boolean isReturnRKOnly() {
+        return returnRKOnly != null ? returnRKOnly : true;
     }
 
     public void visit(EqualsTo equalsTo) {
@@ -99,7 +102,6 @@ public class SelectSqlVisitor implements SelectVisitor, FromItemVisitor, Express
                 this.filters.addFilter(filter);
                 return;
             } else if (SqlContants.PRE_ROW_KEY.equals(columnGroupStr.toUpperCase())) {
-                System.out.println(value);
                 this.scan.setRowPrefixFilter(Bytes.toBytes(value));
             } else if (!Strings.isNullOrEmpty(columnGroupStr)) {
                 String[] columnGroup = SqlUtils.getColumngroup(columnGroupStr);
@@ -133,12 +135,15 @@ public class SelectSqlVisitor implements SelectVisitor, FromItemVisitor, Express
             }
 
             if (colStr.equals("*")) {
+                returnRK = true;
+                returnRKOnly = false;
                 break;
             }
 
             if (SqlContants.ROW_KEY.equals(colStr.toUpperCase())) {
                 returnRK = true;
             } else {
+                returnRKOnly = false;
                 String[] columnGroup = SqlUtils.getColumngroup(item.toString());
 
                 if (columnGroup == null || Strings.isNullOrEmpty(columnGroup[0]) || Strings.isNullOrEmpty(columnGroup[1])) {
@@ -157,6 +162,8 @@ public class SelectSqlVisitor implements SelectVisitor, FromItemVisitor, Express
                     }
                 }
                 columnMap.put(columnFamily, columns);
+
+                scan.addColumn(Bytes.toBytes(columnFamily), Bytes.toBytes(column));
             }
         }
     }

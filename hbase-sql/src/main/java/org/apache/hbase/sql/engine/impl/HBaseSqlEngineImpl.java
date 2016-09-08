@@ -49,6 +49,16 @@ public class HBaseSqlEngineImpl implements HBaseSqlEngine {
 
         Map<String, List<String>> columnMap = sqlVisitor.getColumnMap();
         boolean returnRK = sqlVisitor.isReturnRK();
+        boolean returnRKOnly = sqlVisitor.isReturnRKOnly();
+
+        int type = 0;
+        if (returnRK) {
+            type = Result.RETURN_RK;
+        }
+
+        if (returnRKOnly) {
+            type = Result.ONLY_RETURN_RK;
+        }
 
         List<org.apache.hadoop.hbase.client.Result> results = HBaseUtils.getResult(tableName, scan, columnMap);
 
@@ -57,7 +67,7 @@ public class HBaseSqlEngineImpl implements HBaseSqlEngine {
             resultList = new ArrayList<Result>();
             for (org.apache.hadoop.hbase.client.Result result : results) {
                 Result r = new Result();
-                r.setResult(result);
+                r.setResult(result, type);
 
                 resultList.add(r);
             }

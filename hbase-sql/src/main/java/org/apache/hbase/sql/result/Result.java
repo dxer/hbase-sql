@@ -16,6 +16,10 @@ import java.util.Map;
 
 public class Result {
 
+    public static final int RETURN_RK = 0x1;
+
+    public static final int ONLY_RETURN_RK = 0x2;
+
     private static final String TS_SUFFIX = "._ts";
 
     private static final String ROW_KEY = SqlContants.ROW_KEY;
@@ -86,22 +90,27 @@ public class Result {
         return map.toString();
     }
 
-    public void setResult(org.apache.hadoop.hbase.client.Result result) {
+    public void setResult(org.apache.hadoop.hbase.client.Result result, int type) {
         if (result != null && !result.isEmpty()) {
             List<Cell> cells = result.listCells();
             if (cells != null) {
                 map = new HashMap<String, Object>();
 
-                String rowkey = Bytes.toString(result.getRow());
-                map.put(ROW_KEY, rowkey);
-                for (Cell c : cells) {
-                    String family = Bytes.toString(CellUtil.cloneFamily(c)); // family
-                    String qualifier = Bytes.toString(CellUtil.cloneQualifier(c)); // qualifier
-                    String value = Bytes.toString(CellUtil.cloneValue(c)); // value
-                    long ts = c.getTimestamp(); // 时间戳
+                if (type == RETURN_RK || type == ONLY_RETURN_RK) {
+                    String rowkey = Bytes.toString(result.getRow());
+                    map.put(ROW_KEY, rowkey);
+                }
 
-                    map.put(family + "." + qualifier, value);
-                    map.put(family + "." + qualifier + TS_SUFFIX, ts);
+                if (type != ONLY_RETURN_RK) {
+                    for (Cell c : cells) {
+                        String family = Bytes.toString(CellUtil.cloneFamily(c)); // family
+                        String qualifier = Bytes.toString(CellUtil.cloneQualifier(c)); // qualifier
+                        String value = Bytes.toString(CellUtil.cloneValue(c)); // value
+                        long ts = c.getTimestamp(); // 时间戳
+
+                        map.put(family + "." + qualifier, value);
+                        map.put(family + "." + qualifier + TS_SUFFIX, ts);
+                    }
                 }
             }
         }
