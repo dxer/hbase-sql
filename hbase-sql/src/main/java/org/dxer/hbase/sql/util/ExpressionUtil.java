@@ -6,7 +6,6 @@ import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.StringValue;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
-import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.expression.operators.relational.ItemsList;
 
 import java.util.ArrayList;
@@ -38,12 +37,22 @@ public class ExpressionUtil {
         return list;
     }
 
+    public static String[] getColumnGroup(String columnGroupStr) {
+        if (!Strings.isNullOrEmpty(columnGroupStr)) {
+            String[] strs = columnGroupStr.split("\\.");
+            if (strs != null && strs.length == 2) {
+                return strs;
+            }
+        }
+        return null;
+    }
+
     public static void setColumnMap(String columnGroup, Map<String, List<String>> columnMap) {
         if (Strings.isNullOrEmpty(columnGroup) || columnMap == null) {
             return;
         }
 
-        String[] strs = SqlUtils.getColumnGroup(columnGroup);
+        String[] strs = getColumnGroup(columnGroup);
         if (strs != null && strs.length == 2) {
             String family = strs[0];
             String column = strs[1];
