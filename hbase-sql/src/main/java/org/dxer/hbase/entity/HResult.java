@@ -1,7 +1,6 @@
 package org.dxer.hbase.entity;
 
 
-
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.google.common.base.Strings;

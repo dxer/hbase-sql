@@ -48,11 +48,11 @@ public class HBaseSqlMapParser {
         Document document = null;
         try {
             document = builder.parse(new File(fileName));
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
-        if(document==null){
+        if (document == null) {
             return;
         }
 
@@ -185,8 +185,8 @@ public class HBaseSqlMapParser {
         return tableMap;
     }
 
-    public static Table getTable(String tableName){
-        if(tableMap!=null){
+    public static Table getTable(String tableName) {
+        if (tableMap != null) {
             return tableMap.get(tableName);
         }
         return null;

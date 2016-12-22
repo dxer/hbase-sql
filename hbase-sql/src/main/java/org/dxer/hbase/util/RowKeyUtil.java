@@ -17,5 +17,5 @@ public class RowKeyUtil {
         return ret;
     }
 
-    
+
 }

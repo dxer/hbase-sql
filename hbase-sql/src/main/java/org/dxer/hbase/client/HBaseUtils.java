@@ -12,7 +12,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.dxer.hbase.HBaseSqlContants;
 import org.dxer.hbase.entity.PageResult;
 import org.dxer.hbase.exceptions.NoRowKeyException;
-import org.dxer.hbase.sql.util.SqlUtils;
+import org.dxer.hbase.sql.util.ExpressionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -679,7 +679,7 @@ public class HBaseUtils {
             String family = null;
             String column = null;
 
-            String[] columnGroup = SqlUtils.getColumnGroup(key);
+            String[] columnGroup = ExpressionUtil.getColumnGroup(key);
             if (columnGroup != null && columnGroup.length == 2) {
                 family = columnGroup[0];
                 column = columnGroup[1];

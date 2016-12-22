@@ -160,7 +160,7 @@ public class DeleteSqlVisitor implements ExpressionVisitor {
                 }
             }
         } else if (HBaseSqlContants.HBASE_COLUMN.equals(key.toUpperCase())) {
-            ItemsList itemList =null;//inExpression.getItemsList();
+            ItemsList itemList = null;//inExpression.getItemsList();
             if (itemList != null) {
                 List list = ((ExpressionList) itemList).getExpressions();
                 if (list != null && list.size() > 0) {
