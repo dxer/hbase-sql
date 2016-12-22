@@ -1,4 +1,4 @@
-package org.apache.hbase.client;
+package org.dxer.hbase.client;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;

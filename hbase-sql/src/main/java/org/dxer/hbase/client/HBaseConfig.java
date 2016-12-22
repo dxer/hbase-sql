@@ -1,18 +1,17 @@
-package org.apache.hbase.client;
+package org.dxer.hbase.client;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
 
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-
 /**
- * 
- * @class HBaseConfig
  * @author linghf
  * @version 1.0
+ * @class HBaseConfig
  * @since 2016年3月29日
  */
 public class HBaseConfig {
@@ -22,15 +21,16 @@ public class HBaseConfig {
     private static Map<String, String> config = new HashMap<String, String>();
 
     private static Properties prop = new Properties();
+
     static {
         try {
-            InputStream is = HBaseConfig.class.getResourceAsStream("hbase.properties");
+            InputStream is = HBaseConfig.class.getResourceAsStream("../../../../hbase.properties");
             prop.load(is);
             if (is != null) {
                 is.close();
             }
         } catch (Exception e) {
-            System.out.println("file " + "hbase.properties" + " not found!\n" + e);
+            System.err.println("file " + "hbase.properties" + " not found!\n" + e);
         }
     }
 
@@ -83,7 +83,7 @@ public class HBaseConfig {
 //        configuration.set("zookeeper.recovery.retry.intervalmill", getValue("zookeeper.recovery.retry.intervalmill"));
 
         if (config != null && !config.isEmpty()) {
-            for (String name: config.keySet()) {
+            for (String name : config.keySet()) {
                 String value = config.get(name);
                 configuration.set(name, value);
             }
