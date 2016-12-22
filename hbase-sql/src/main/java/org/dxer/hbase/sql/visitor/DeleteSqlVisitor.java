@@ -1,4 +1,4 @@
-package org.apache.hbase.sql.visitor;
+package org.dxer.hbase.sql.visitor;
 
 import com.google.common.base.Strings;
 import net.sf.jsqlparser.expression.*;
@@ -9,7 +9,8 @@ import net.sf.jsqlparser.expression.operators.relational.*;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.delete.Delete;
 import net.sf.jsqlparser.statement.select.SubSelect;
-import org.apache.hbase.sql.util.VisitorUtils;
+import org.dxer.hbase.HBaseSqlContants;
+import org.dxer.hbase.sql.util.ExpressionUtil;
 
 import java.util.*;
 
@@ -46,7 +47,7 @@ public class DeleteSqlVisitor implements ExpressionVisitor {
     }
 
     public String getTableName() {
-        return delete != null ? delete.getTable().getWholeTableName() : null;
+        return delete != null ? delete.getTable().getName() : null;
     }
 
     public void visit(NullValue nullValue) {
@@ -57,9 +58,6 @@ public class DeleteSqlVisitor implements ExpressionVisitor {
 
     }
 
-    public void visit(InverseExpression inverseExpression) {
-
-    }
 
     public void visit(JdbcParameter jdbcParameter) {
 
@@ -128,17 +126,17 @@ public class DeleteSqlVisitor implements ExpressionVisitor {
         String value = equalsTo.getRightExpression().toString();
 
         if (!Strings.isNullOrEmpty(key) && !Strings.isNullOrEmpty(value)) {
-            if (SqlContants.ROW_KEY.equals(key.toUpperCase())) {
+            if (HBaseSqlContants.ROW_KEY.equals(key.toUpperCase())) {
                 rowkeys.add(value);
-            } else if (SqlContants.HBASE_COLUMN.equals(key.toUpperCase())) {
+            } else if (HBaseSqlContants.HBASE_COLUMN.equals(key.toUpperCase())) {
                 if (Strings.isNullOrEmpty(value)) {
                     return;
                 }
 
-                if (!delAll && value.equals(SqlContants.ASTERISK)) {
+                if (!delAll && value.equals(HBaseSqlContants.ASTERISK)) {
                     delAll = true;
                 } else if (!delAll) {
-                    VisitorUtils.setColumnMap(value, columnMap);
+                    ExpressionUtil.setColumnMap(value, columnMap);
                 }
             }
         }
@@ -154,15 +152,15 @@ public class DeleteSqlVisitor implements ExpressionVisitor {
 
     public void visit(InExpression inExpression) {
         String key = inExpression.getLeftExpression().toString();
-        if (SqlContants.ROW_KEY.equals(key.toUpperCase())) {
-            List<String> values = VisitorUtils.getStringList(inExpression);
+        if (HBaseSqlContants.ROW_KEY.equals(key.toUpperCase())) {
+            List<String> values = ExpressionUtil.getStringList(inExpression.getRightItemsList());
             if (values != null && !values.isEmpty()) {
                 for (String value : values) {
                     rowkeys.add(value);
                 }
             }
-        } else if (SqlContants.HBASE_COLUMN.equals(key.toUpperCase())) {
-            ItemsList itemList = inExpression.getItemsList();
+        } else if (HBaseSqlContants.HBASE_COLUMN.equals(key.toUpperCase())) {
+            ItemsList itemList =null;//inExpression.getItemsList();
             if (itemList != null) {
                 List list = ((ExpressionList) itemList).getExpressions();
                 if (list != null && list.size() > 0) {
@@ -176,12 +174,24 @@ public class DeleteSqlVisitor implements ExpressionVisitor {
                         }
 
                         if (!Strings.isNullOrEmpty(value)) {
-                            VisitorUtils.setColumnMap(value, columnMap);
+                            ExpressionUtil.setColumnMap(value, columnMap);
                         }
                     }
                 }
             }
         }
+    }
+
+    public void visit(SignedExpression signedExpression) {
+
+    }
+
+    public void visit(JdbcNamedParameter jdbcNamedParameter) {
+
+    }
+
+    public void visit(HexValue hexValue) {
+
     }
 
     public void visit(IsNullExpression isNullExpression) {
@@ -204,7 +214,7 @@ public class DeleteSqlVisitor implements ExpressionVisitor {
 
     }
 
-    public void visit(Column tableColumn) {
+    public void visit(Column column) {
 
     }
 
@@ -249,6 +259,78 @@ public class DeleteSqlVisitor implements ExpressionVisitor {
     }
 
     public void visit(BitwiseXor bitwiseXor) {
+
+    }
+
+    public void visit(CastExpression castExpression) {
+
+    }
+
+    public void visit(Modulo modulo) {
+
+    }
+
+    public void visit(AnalyticExpression analyticExpression) {
+
+    }
+
+    public void visit(WithinGroupExpression withinGroupExpression) {
+
+    }
+
+    public void visit(ExtractExpression extractExpression) {
+
+    }
+
+    public void visit(IntervalExpression intervalExpression) {
+
+    }
+
+    public void visit(OracleHierarchicalExpression oracleHierarchicalExpression) {
+
+    }
+
+    public void visit(RegExpMatchOperator regExpMatchOperator) {
+
+    }
+
+    public void visit(JsonExpression jsonExpression) {
+
+    }
+
+    public void visit(RegExpMySQLOperator regExpMySQLOperator) {
+
+    }
+
+    public void visit(UserVariable userVariable) {
+
+    }
+
+    public void visit(NumericBind numericBind) {
+
+    }
+
+    public void visit(KeepExpression keepExpression) {
+
+    }
+
+    public void visit(MySQLGroupConcat mySQLGroupConcat) {
+
+    }
+
+    public void visit(RowConstructor rowConstructor) {
+
+    }
+
+    public void visit(OracleHint oracleHint) {
+
+    }
+
+    public void visit(TimeKeyExpression timeKeyExpression) {
+
+    }
+
+    public void visit(DateTimeLiteralExpression dateTimeLiteralExpression) {
 
     }
 }
