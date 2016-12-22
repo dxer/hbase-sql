@@ -1,8 +1,6 @@
-package org.apache.hbase.sql.engine;
+package org.dxer.hbase.sql.engine;
 
-
-
-import org.apache.hbase.sql.result.Result;
+import org.dxer.hbase.entity.HResult;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,9 +12,7 @@ import java.util.List;
 
 public interface HBaseSqlEngine {
 
-    public List<Result> select(String sql) throws Exception;
-
-    public List<Result> select(String sql, String startRow, String stopRow) throws Exception;
+    public List<HResult> select(String sql) throws Exception;
 
     public void insert(String sql) throws Exception;
 

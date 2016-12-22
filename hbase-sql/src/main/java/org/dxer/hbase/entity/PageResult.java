@@ -1,4 +1,4 @@
-package org.apache.hbase.sql.result;
+package org.dxer.hbase.entity;
 
 /**
  * Created by linghf on 2016/9/1.
@@ -13,7 +13,7 @@ public class PageResult {
 
     private Integer totalPage;
 
-    private Result[] results;
+    private HResult[] results;
 
     public Integer getCurrentPage() {
         return currentPage;
@@ -47,11 +47,11 @@ public class PageResult {
         this.totalPage = totalPage;
     }
 
-    public Result[] getResults() {
+    public HResult[] getResults() {
         return results;
     }
 
-    public void setResults(Result[] results) {
+    public void setResults(HResult[] results) {
         this.results = results;
     }
 }

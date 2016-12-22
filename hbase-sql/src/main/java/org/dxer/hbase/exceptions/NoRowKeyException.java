@@ -1,4 +1,4 @@
-package org.apache.hbase.exceptions;
+package org.dxer.hbase.exceptions;
 
 /**
  * Created by linghf on 2016/8/30.
