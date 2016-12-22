@@ -1,4 +1,4 @@
-package org.apache.hbase.sql.util;
+package org.dxer.hbase.sql.util;
 
 import com.google.common.base.Strings;
 import net.sf.jsqlparser.expression.DoubleValue;
@@ -17,26 +17,23 @@ import java.util.Map;
  * Created by linghf on 2016/9/2.
  */
 
-public class VisitorUtils {
+public class ExpressionUtil {
 
-    public static List<String> getStringList(InExpression inExpression) {
+    public static List<String> getStringList(ItemsList itemsList) {
         List<String> list = null;
-        if (inExpression != null) {
-            list = new ArrayList<String>();
-            ItemsList itemList = inExpression.getItemsList();
-            if (itemList != null) {
-                List items = ((ExpressionList) itemList).getExpressions();
-                if (items != null && items.size() > 0) {
-                    for (Object o : items) {
-                        String value = getString((Expression) o);
+        if (itemsList != null) {
 
-                        if (!Strings.isNullOrEmpty(value)) {
-                            list.add(value);
-                        }
+            List items = ((ExpressionList) itemsList).getExpressions();
+            if (items != null && items.size() > 0) {
+                list = new ArrayList<String>();
+                for (Object o : items) {
+                    String value = getString((Expression) o);
+
+                    if (!Strings.isNullOrEmpty(value)) {
+                        list.add(value);
                     }
                 }
             }
-
         }
         return list;
     }
@@ -46,7 +43,7 @@ public class VisitorUtils {
             return;
         }
 
-        String[] strs = SqlUtils.getColumngroup(columnGroup);
+        String[] strs = SqlUtils.getColumnGroup(columnGroup);
         if (strs != null && strs.length == 2) {
             String family = strs[0];
             String column = strs[1];
