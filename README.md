@@ -18,6 +18,8 @@ select * from user where _rowkey_=11111
 // 查询info列族中的age列
 select info.age from user where _pre_rowkey_ = 11 
 select * from user where _rowkey_ in ('1111', '2222')
+select _rowkey_ from user limit 3
+select _rowkey_,info.age from user where _startrow_ = 222 and _stoprow_ = 333
 ```
 
 java实现如下：
