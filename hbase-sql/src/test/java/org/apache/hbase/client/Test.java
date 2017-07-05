@@ -1,8 +1,9 @@
 package org.apache.hbase.client;
 
-import org.apache.hbase.sql.engine.HBaseSqlEngine;
-import org.apache.hbase.sql.engine.impl.HBaseSqlEngineImpl;
-import org.apache.hbase.sql.result.Result;
+
+import org.dxer.hbase.entity.HResult;
+import org.dxer.hbase.sql.engine.HBaseSqlEngine;
+import org.dxer.hbase.sql.engine.impl.HBaseSqlEngineImpl;
 
 import java.util.List;
 
@@ -17,9 +18,9 @@ public class Test {
         //   String sql = "select * from user where _rowkey_ in (111, 222)";
 //        String sql = "select info.age from user where _pre_rowkey_  = 11 ";
 
-        List<Result> results = sqlEngine.select(sql);
+        List<HResult> results = sqlEngine.select(sql);
 
-        for (Result r : results) {
+        for (HResult r : results) {
             System.out.println(r.toString());
         }
 
